@@ -7,10 +7,10 @@ import Copy from '../assets/CopyIcone.svg';
 import User from '../assets/user.svg';
 import Lock from '../assets/lock.svg';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';  
+import { useNavigate } from 'react-router-dom';
 
 const SignIn = () => {
-    const navigate = useNavigate();  
+    const navigate = useNavigate();
 
     const [name, setName] = useState("")
     const [password, setPassword] = useState("")
@@ -18,7 +18,17 @@ const SignIn = () => {
         if (name == "" || password == "") {
             toast.warning("please input all field")
         } else {
-            navigate('/dashboard'); // Change to your desired path  
+            const response = await axios.post('http://localhost:8080/api/module/users/auth', {
+                name,
+                password
+            });
+            if (response.status === 200) {
+                toast.success("Successfully Athenticated")
+                localStorage.setItem('isSigned', true);
+            } else {
+                toast.success("Authentication failed")
+            }
+            navigate('/dashboard');
         }
     }
     return (

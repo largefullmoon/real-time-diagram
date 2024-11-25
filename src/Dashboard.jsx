@@ -15,8 +15,10 @@ import {
 import '@xyflow/react/dist/style.css';
 import Edit from './assets/edit.svg'
 import Delete from './assets/delete.svg'
+import LogOut from './assets/logout.svg'
 import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
+import { useNavigate } from 'react-router-dom';
 const initialNodes = [
 ];
 const initialEdges = [];
@@ -104,6 +106,10 @@ const nodeTypes = {
     normal: NormalNode,
 };
 const Dashboard = () => {
+    const navigate = useNavigate();
+    if (!localStorage.getItem('isSigned')) {
+        navigate('/signin')
+    }
     const [json, setJson] = useState({
         "attachedExchanges": [
             {
@@ -295,6 +301,13 @@ const Dashboard = () => {
     );
     return (
         <div style={{ width: '100vw', height: '100vh' }}>
+            <div className='absolute top-0 right-0 z-10 flex flex-col items-center cursor-pointer w-fit h-fit hover:bg-blue-300' onClick={() => {
+                localStorage.removeItem('isSigned')
+                navigate("/")
+            }}>
+                <LogOut className="w-8 h-8" />
+                Log Out
+            </div>
             <ReactFlowProvider >
                 <ReactFlow
                     nodes={nodes}
@@ -305,6 +318,7 @@ const Dashboard = () => {
                     // colorMode={'dark'}
                     fitView
                     fitViewOptions={{
+                        
                         padding: 0.2,
                     }}
                     nodeTypes={nodeTypes}
