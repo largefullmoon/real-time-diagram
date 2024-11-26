@@ -18,16 +18,16 @@ const SignIn = () => {
         if (name == "" || password == "") {
             toast.warning("please input all field")
         } else {
-            const response = await axios.post('http://localhost:8080/api/module/users/auth', {
-                name,
-                password
-            });
-            if (response.status === 200) {
-                toast.success("Successfully Athenticated")
-                localStorage.setItem('isSigned', true);
-            } else {
-                toast.success("Authentication failed")
-            }
+            // const response = await axios.post('http://localhost:8080/api/module/users/auth', {
+            //     name,
+            //     password
+            // });
+            // if (response.status === 200) {
+            //     toast.success("Successfully Athenticated")
+            localStorage.setItem('isSigned', true);
+            // } else {
+            //     toast.success("Authentication failed")
+            // }
             navigate('/dashboard');
         }
     }
