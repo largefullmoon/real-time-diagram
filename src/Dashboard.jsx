@@ -23,6 +23,7 @@ import { Tooltip } from 'react-tooltip'
 import 'react-tooltip/dist/react-tooltip.css'
 import { useNavigate } from 'react-router-dom';
 import { data } from 'autoprefixer';
+import axios from 'axios';
 const initialNodes = [
 ];
 const initialEdges = [];
@@ -182,186 +183,44 @@ const Dashboard = () => {
     if (!localStorage.getItem('isSigned')) {
         navigate('/signin')
     }
-    const [json, setJson] = useState({
-        "attachedExchanges": [
-            {
-                "exchangeName": "demo_sj_exchange",
-                "queues": [
-                    {
-                        "queueName": "demoQueue",
-                        "consumers": [
-                            {
-                                "channelName": "127.0.0.1:49346 -> 127.0.0.1:5672 (1)",
-                                "consumerTag": "rabbitmq-experiment-service",
-                                "isActive": true
-                            }
-                        ],
-                        "isDurable": true,
-                        "messageCount": 0,
-                        "bindings": null,
-                        "guid": "e76049db-83bf-4cff-b282-b4fa36a0fa1e"
-                    },
-                    {
-                        "queueName": "demoQueue1",
-                        "consumers": [],
-                        "isDurable": true,
-                        "messageCount": 0,
-                        "bindings": null,
-                        "guid": "821d52e5-c9c8-4223-a6c1-7687d818fbc5"
-                    }
-                ],
-                "exchange": {
-                    "exchangeName": "demo_sj_exchange",
-                    "exchangeType": "direct",
-                    "isDurable": true,
-                    "guid": "0628c3c2-c40a-436a-ab9d-9405e693be60"
-                },
-                "bindings": [
-                    {
-                        "exchangeName": "demo_sj_exchange",
-                        "routingKey": "demo_sj_routing_key"
-                    },
-                    {
-                        "exchangeName": "demo_sj_exchange",
-                        "routingKey": "demo_sj_routing_key"
-                    }
-                ],
-                "empty": false
-            },
-            {
-                "exchangeName": "demo_sj_exchange_dlx",
-                "queues": [
-                    {
-                        "queueName": "demoQueue_dlq",
-                        "consumers": [],
-                        "isDurable": true,
-                        "messageCount": 0,
-                        "bindings": null,
-                        "guid": "6867ea89-2d57-4b2b-963a-acc0922c2f66"
-                    }
-                ],
-                "exchange": {
-                    "exchangeName": "demo_sj_exchange_dlx",
-                    "exchangeType": "direct",
-                    "isDurable": true,
-                    "guid": "f2c51c48-3be9-48c5-8207-c3129dfaa78b"
-                },
-                "bindings": [
-                    {
-                        "exchangeName": "demo_sj_exchange_dlx",
-                        "routingKey": "demo_sj_routing_key_dlq"
-                    }
-                ],
-                "empty": false
-            }
-        ],
-        "unAttachedExchanges": [
-            {
-                "exchangeName": "amq.direct",
-                "queues": null,
-                "exchange": {
-                    "exchangeName": "amq.direct",
-                    "exchangeType": "direct",
-                    "isDurable": true,
-                    "guid": "5321749c-3698-46e2-a518-3dc0c834b8ab"
-                },
-                "bindings": null,
-                "empty": false
-            },
-            {
-                "exchangeName": "amq.fanout",
-                "queues": null,
-                "exchange": {
-                    "exchangeName": "amq.fanout",
-                    "exchangeType": "fanout",
-                    "isDurable": true,
-                    "guid": "503da384-538a-4769-9973-021d33d27201"
-                },
-                "bindings": null,
-                "empty": false
-            },
-            {
-                "exchangeName": "amq.headers",
-                "queues": null,
-                "exchange": {
-                    "exchangeName": "amq.headers",
-                    "exchangeType": "headers",
-                    "isDurable": true,
-                    "guid": "41ebab4d-80b3-457e-aef4-dca6554900b6"
-                },
-                "bindings": null,
-                "empty": false
-            },
-            {
-                "exchangeName": "amq.match",
-                "queues": null,
-                "exchange": {
-                    "exchangeName": "amq.match",
-                    "exchangeType": "headers",
-                    "isDurable": true,
-                    "guid": "6916db2f-4b9d-416a-a4a3-bbc7b8c04b64"
-                },
-                "bindings": null,
-                "empty": false
-            },
-            {
-                "exchangeName": "amq.rabbitmq.trace",
-                "queues": null,
-                "exchange": {
-                    "exchangeName": "amq.rabbitmq.trace",
-                    "exchangeType": "topic",
-                    "isDurable": true,
-                    "guid": "5b8af142-e49d-4d65-9355-38837c454db6"
-                },
-                "bindings": null,
-                "empty": false
-            },
-            {
-                "exchangeName": "amq.topic",
-                "queues": null,
-                "exchange": {
-                    "exchangeName": "amq.topic",
-                    "exchangeType": "topic",
-                    "isDurable": true,
-                    "guid": "31754845-d932-476c-9be9-fda336be36a3"
-                },
-                "bindings": null,
-                "empty": false
-            }
-        ]
+    useEffect(() => {
+        setJson(JSON.parse(localStorage.getItem('json')))
     })
+    const [json, setJson] = useState({})
     useEffect(() => {
         let elements = [];
         let links = []
-        json.attachedExchanges.forEach((attachExchange) => {
-            elements.push({
-                id: `exchange_${attachExchange.exchange.guid}`,
-                position: { x: 0, y: elements.length * 50 },
-                data: { label: attachExchange.exchange.exchangeName, color: "blue", exchange: attachExchange.exchange },
-                type: 'normal'
-            });
-            if (attachExchange.queues) {
-                attachExchange.queues.forEach((queue, index) => {
-                    elements.push({
-                        id: `queue_${queue.guid}`, // Using GUID as unique id  
-                        position: { x: 400, y: elements.length * 50 }, // Random x-position to avoid overlap  
-                        data: { label: queue.queueName, color: "purple", queue: queue },
-                        type: 'normal'
-                    });
-                    links.push({ id: `link_queue_${queue.guid}`, source: `exchange_${attachExchange.exchange.guid}`, target: `queue_${queue.guid}`, type: "buttonedge", data: { count: queue.messageCount } })
+        if (json?.attachedExchanges) {
+            json.attachedExchanges.forEach((attachExchange) => {
+                elements.push({
+                    id: `exchange_${attachExchange.exchange.guid}`,
+                    position: { x: 0, y: elements.length * 50 },
+                    data: { label: attachExchange.exchange.exchangeName, color: "blue", exchange: attachExchange.exchange },
+                    type: 'normal'
                 });
-            }
-        });
-
-        json.unAttachedExchanges.forEach((unattachExchange) => {
-            elements.push({
-                id: `unattached_exchange_${unattachExchange.exchange.guid}`,
-                position: { x: 0, y: elements.length * 50 },
-                data: { label: unattachExchange.exchange.exchangeName, color: "blue", exchange: unattachExchange.exchange },
-                type: 'normal'
+                if (attachExchange.queues) {
+                    attachExchange.queues.forEach((queue, index) => {
+                        elements.push({
+                            id: `queue_${queue.guid}`, // Using GUID as unique id  
+                            position: { x: 400, y: elements.length * 50 }, // Random x-position to avoid overlap  
+                            data: { label: queue.queueName, color: "purple", queue: queue },
+                            type: 'normal'
+                        });
+                        links.push({ id: `link_queue_${queue.guid}`, source: `exchange_${attachExchange.exchange.guid}`, target: `queue_${queue.guid}`, type: "buttonedge", data: { count: queue.messageCount, name: queue.queueName } })
+                    });
+                }
             });
-        });
-
+        }
+        if (json?.unAttachedExchanges) {
+            json.unAttachedExchanges.forEach((unattachExchange) => {
+                elements.push({
+                    id: `unattached_exchange_${unattachExchange.exchange.guid}`,
+                    position: { x: 0, y: elements.length * 50 },
+                    data: { label: unattachExchange.exchange.exchangeName, color: "blue", exchange: unattachExchange.exchange },
+                    type: 'normal'
+                });
+            });
+        }
         setNodes(elements);
         setEdges(links);
     }, [json]);
@@ -371,6 +230,79 @@ const Dashboard = () => {
         (params) => setEdges((eds) => addEdge({ ...params, type: "buttonedge" }, eds)),
         [setEdges],
     );
+
+    const getSocketData = async () => {
+        const socket = new WebSocket('ws://app.sundru.net/ws');
+        socket.onopen = function() {
+            console.log('WebSocket connection established.');
+
+            // Construct the STOMP CONNECT frame
+            const connectFrame = 'CONNECT\n' +
+                                 'accept-version:1.2,1.1\n' +
+                                 'heart-beat:0,0\n\n' + // Heartbeat setting
+                                 '\0'; // Null byte to terminate the frame
+
+            // Send the CONNECT frame
+            socket.send(connectFrame);
+            console.log('CONNECT frame sent.');
+
+            // After connection is established, send a STOMP SEND frame
+            const messageBody = {
+                "command": "SEND",
+                "destination": "/app/realtime-info",
+                "body": {
+                    "vhost": null,  // Replace with your vhost if necessary
+                    "queueNames": ["demoQueue_dlq"]  // Replace with the queue names you want
+                }
+            };
+
+            // Convert the body to a JSON string
+            const bodyJson = JSON.stringify(messageBody.body);
+
+            // Construct the STOMP SEND frame
+            const sendFrame = 'SEND\n' +
+                              'destination:/app/realtime-info\n' +
+                              'content-type:application/json\n\n' +  // Content-Type header
+                              bodyJson + '\0'; // Null byte to terminate the frame
+
+            // Send the SEND frame
+            socket.send(sendFrame);
+            console.log('SEND frame sent: ' + bodyJson);
+  
+            // Subscribe to the /topic/realtime-response
+            const subscribeFrame = 'SUBSCRIBE\n' +
+                                   'destination:/topic/realtime-response\n' +
+                                   'id:sub-001\n\n' + // Add a unique subscription ID
+                                   '\0'; // Null byte to terminate the frame
+            socket.send(subscribeFrame);
+            console.log('Subscribed to /topic/realtime-response.');
+        };
+        socket.onmessage = function (event) {
+            // Parse the server response (assuming it’s a JSON response)
+            try {
+                const response = event.data;
+                if (Array.isArray(response)) {
+                    // Display each QueueDto object in the response
+                    response.forEach(queueDto => {
+                        setEdges(edges.map((edge) => {
+                            if(edge.data.name === queueDto.queueName) {
+                                return { ...edge, data: { ...edge.data, count: queueDto.messageCount } };
+                            }else{
+                                return edge
+                            }
+                        }));
+                    });
+                } else {
+                    console.log('Unexpected response format.');
+                }
+            } catch (error) {
+                console.log('Error parsing response: ' + event.data);
+            }
+        };
+    }
+    useEffect(() => {
+        getSocketData()
+    }, [])
     return (
         <div style={{ width: '100vw', height: '100vh' }}>
             <div className='absolute top-0 right-0 z-10 flex flex-col items-center cursor-pointer w-fit h-fit hover:bg-blue-300' onClick={() => {

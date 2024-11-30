@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Vector from '../assets/Vector.png';
 import Ellipse from '../assets/Ellipse.png';
 import Ellipse1 from '../assets/Ellipse1.png';
@@ -8,27 +8,53 @@ import User from '../assets/user.svg';
 import Lock from '../assets/lock.svg';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-
+import axios from 'axios';
 const SignIn = () => {
     const navigate = useNavigate();
 
     const [name, setName] = useState("")
     const [password, setPassword] = useState("")
+    const token = useRef(null);
+    const isLoading = useRef(false)
+    const getJson = async () => {
+        const response = await axios.get('http://app.sundru.net/api/rabbitmq/get-merged-lists/1', {
+            headers: {
+                'Authorization': `Bearer ${token.current}`,
+                'Content-Type': 'application/json',
+            }
+        });
+        await localStorage.setItem('json', JSON.stringify(response.data))
+    }
     const signin = async () => {
         if (name == "" || password == "") {
             toast.warning("please input all field")
         } else {
-            // const response = await axios.post('http://localhost:8080/api/module/users/auth', {
-            //     name,
-            //     password
-            // });
-            // if (response.status === 200) {
-            //     toast.success("Successfully Athenticated")
-            localStorage.setItem('isSigned', true);
-            // } else {
-            //     toast.success("Authentication failed")
-            // }
-            navigate('/dashboard');
+            console.log(name, password)
+            const response = await axios.post('http://app.sundru.net/api/auth/login', {
+                username: name,
+                password: password,
+                email: ''
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            console.log(response, "response")
+            if (response.status === 200) {
+                token.current = response.data
+                toast.success("Successfully Athenticated")
+                await localStorage.setItem('token', response.data);
+                await localStorage.setItem('isSigned', true);
+                toast.info('Loading data...', {
+                    autoClose: false, // Keep the toast open until we close it
+                    position: 'bottom-center'
+                });
+                await getJson()
+                toast.dismiss();
+                navigate('/dashboard');
+            } else {
+                toast.success("Authentication failed")
+            }
         }
     }
     return (
@@ -44,11 +70,15 @@ const SignIn = () => {
                 </div>
                 <div className='relative mb-5'>
                     <User className='absolute w-5 h-5 top-3 left-1' />
-                    <input onChange={setName} type="text" className='rounded-md  focus:border-white focus:outline-none pl-8 border border-white w-[300px] h-[45px] bg-[#088883] text-white text-[14px]' placeholder='USERNAME' />
+                    <input onChange={(e) => {
+                        setName(e.target.value)
+                    }} type="text" className='rounded-md  focus:border-white focus:outline-none pl-8 border border-white w-[300px] h-[45px] bg-[#088883] text-white text-[14px]' placeholder='USERNAME' />
                 </div>
                 <div className='relative mb-10'>
                     <Lock className='absolute w-5 h-5 top-3 left-1' />
-                    <input onChange={setPassword} type="password" className='rounded-md focus:border-white focus:outline-none pl-8 border border-white w-[300px] h-[45px] bg-[#088883] text-white text-[14px]' placeholder='PASSWORD' />
+                    <input onChange={(e) => {
+                        setPassword(e.target.value)
+                    }} type="password" className='rounded-md focus:border-white focus:outline-none pl-8 border border-white w-[300px] h-[45px] bg-[#088883] text-white text-[14px]' placeholder='PASSWORD' />
                 </div>
                 <button onClick={(() => {
                     signin()
