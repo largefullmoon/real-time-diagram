@@ -11,20 +11,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 const SignIn = () => {
     const navigate = useNavigate();
-
     const [name, setName] = useState("")
     const [password, setPassword] = useState("")
     const token = useRef(null);
     const isLoading = useRef(false)
-    const getJson = async () => {
-        const response = await axios.get('http://app.sundru.net/api/rabbitmq/get-merged-lists/1', {
-            headers: {
-                'Authorization': `Bearer ${token.current}`,
-                'Content-Type': 'application/json',
-            }
-        });
-        await localStorage.setItem('json', JSON.stringify(response.data))
-    }
     const signin = async () => {
         if (name == "" || password == "") {
             toast.warning("please input all field")
@@ -45,12 +35,6 @@ const SignIn = () => {
                 toast.success("Successfully Athenticated")
                 await localStorage.setItem('token', response.data);
                 await localStorage.setItem('isSigned', true);
-                toast.info('Loading data...', {
-                    autoClose: false, // Keep the toast open until we close it
-                    position: 'bottom-center'
-                });
-                await getJson()
-                toast.dismiss();
                 navigate('/dashboard');
             } else {
                 toast.success("Authentication failed")

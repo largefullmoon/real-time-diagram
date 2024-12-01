@@ -179,51 +179,63 @@ const edgeTypes = {
     buttonedge: CustomEdge,
 };
 const Dashboard = () => {
+    const [json, setJson] = useState({})
     const navigate = useNavigate();
     if (!localStorage.getItem('isSigned')) {
         navigate('/signin')
     }
+    const getJson = async () => {
+        const response = await axios.get('http://app.sundru.net/api/rabbitmq/get-merged-lists/1', {
+            headers: {
+                'Authorization': `Bearer ${token.current}`,
+                'Content-Type': 'application/json',
+            }
+        });
+        setJson(response.data)
+    }
     useEffect(() => {
-        setJson(JSON.parse(localStorage.getItem('json')))
-    })
-    const [json, setJson] = useState({})
-    useEffect(() => {
-        let elements = [];
-        let links = []
-        if (json?.attachedExchanges) {
-            json.attachedExchanges.forEach((attachExchange) => {
-                elements.push({
-                    id: `exchange_${attachExchange.exchange.guid}`,
-                    position: { x: 0, y: elements.length * 50 },
-                    data: { label: attachExchange.exchange.exchangeName, color: "blue", exchange: attachExchange.exchange },
-                    type: 'normal'
-                });
-                if (attachExchange.queues) {
-                    attachExchange.queues.forEach((queue, index) => {
-                        elements.push({
-                            id: `queue_${queue.guid}`, // Using GUID as unique id  
-                            position: { x: 400, y: elements.length * 50 }, // Random x-position to avoid overlap  
-                            data: { label: queue.queueName, color: "purple", queue: queue },
-                            type: 'normal'
-                        });
-                        links.push({ id: `link_queue_${queue.guid}`, source: `exchange_${attachExchange.exchange.guid}`, target: `queue_${queue.guid}`, type: "buttonedge", data: { count: queue.messageCount, name: queue.queueName } })
+        if (json != {}) {
+            let elements = [];
+            let links = []
+            if (json?.attachedExchanges) {
+                json.attachedExchanges.forEach((attachExchange) => {
+                    elements.push({
+                        id: `exchange_${attachExchange.exchange.guid}`,
+                        position: { x: 0, y: elements.length * 50 },
+                        data: { label: attachExchange.exchange.exchangeName, color: "blue", exchange: attachExchange.exchange },
+                        type: 'normal'
                     });
-                }
-            });
-        }
-        if (json?.unAttachedExchanges) {
-            json.unAttachedExchanges.forEach((unattachExchange) => {
-                elements.push({
-                    id: `unattached_exchange_${unattachExchange.exchange.guid}`,
-                    position: { x: 0, y: elements.length * 50 },
-                    data: { label: unattachExchange.exchange.exchangeName, color: "blue", exchange: unattachExchange.exchange },
-                    type: 'normal'
+                    if (attachExchange.queues) {
+                        attachExchange.queues.forEach((queue, index) => {
+                            elements.push({
+                                id: `queue_${queue.guid}`, // Using GUID as unique id  
+                                position: { x: 400, y: elements.length * 50 }, // Random x-position to avoid overlap  
+                                data: { label: queue.queueName, color: "purple", queue: queue },
+                                type: 'normal'
+                            });
+                            links.push({ id: `link_queue_${queue.guid}`, source: `exchange_${attachExchange.exchange.guid}`, target: `queue_${queue.guid}`, type: "buttonedge", data: { count: queue.messageCount, name: queue.queueName } })
+                        });
+                    }
                 });
-            });
+            }
+            if (json?.unAttachedExchanges) {
+                json.unAttachedExchanges.forEach((unattachExchange) => {
+                    elements.push({
+                        id: `unattached_exchange_${unattachExchange.exchange.guid}`,
+                        position: { x: 0, y: elements.length * 50 },
+                        data: { label: unattachExchange.exchange.exchangeName, color: "blue", exchange: unattachExchange.exchange },
+                        type: 'normal'
+                    });
+                });
+            }
+            setNodes(elements);
+            setEdges(links);
         }
-        setNodes(elements);
-        setEdges(links);
     }, [json]);
+    useEffect(() => {
+        if (edges.length > 0 && nodes.length > 0)
+            getSocketData()
+    }, [edges, nodes])
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const onConnect = useCallback(
@@ -233,14 +245,14 @@ const Dashboard = () => {
 
     const getSocketData = async () => {
         const socket = new WebSocket('ws://app.sundru.net/ws');
-        socket.onopen = function() {
+        socket.onopen = function () {
             console.log('WebSocket connection established.');
 
             // Construct the STOMP CONNECT frame
             const connectFrame = 'CONNECT\n' +
-                                 'accept-version:1.2,1.1\n' +
-                                 'heart-beat:0,0\n\n' + // Heartbeat setting
-                                 '\0'; // Null byte to terminate the frame
+                'accept-version:1.2,1.1\n' +
+                'heart-beat:0,0\n\n' + // Heartbeat setting
+                '\0'; // Null byte to terminate the frame
 
             // Send the CONNECT frame
             socket.send(connectFrame);
@@ -261,19 +273,19 @@ const Dashboard = () => {
 
             // Construct the STOMP SEND frame
             const sendFrame = 'SEND\n' +
-                              'destination:/app/realtime-info\n' +
-                              'content-type:application/json\n\n' +  // Content-Type header
-                              bodyJson + '\0'; // Null byte to terminate the frame
+                'destination:/app/realtime-info\n' +
+                'content-type:application/json\n\n' +  // Content-Type header
+                bodyJson + '\0'; // Null byte to terminate the frame
 
             // Send the SEND frame
             socket.send(sendFrame);
             console.log('SEND frame sent: ' + bodyJson);
-  
+
             // Subscribe to the /topic/realtime-response
             const subscribeFrame = 'SUBSCRIBE\n' +
-                                   'destination:/topic/realtime-response\n' +
-                                   'id:sub-001\n\n' + // Add a unique subscription ID
-                                   '\0'; // Null byte to terminate the frame
+                'destination:/topic/realtime-response\n' +
+                'id:sub-001\n\n' + // Add a unique subscription ID
+                '\0'; // Null byte to terminate the frame
             socket.send(subscribeFrame);
             console.log('Subscribed to /topic/realtime-response.');
         };
@@ -285,9 +297,9 @@ const Dashboard = () => {
                     // Display each QueueDto object in the response
                     response.forEach(queueDto => {
                         setEdges(edges.map((edge) => {
-                            if(edge.data.name === queueDto.queueName) {
+                            if (edge.data.name === queueDto.queueName) {
                                 return { ...edge, data: { ...edge.data, count: queueDto.messageCount } };
-                            }else{
+                            } else {
                                 return edge
                             }
                         }));
@@ -301,7 +313,14 @@ const Dashboard = () => {
         };
     }
     useEffect(() => {
-        getSocketData()
+        setTimeout(async () => {
+            toast.info('Loading data...', {
+                autoClose: false, // Keep the toast open until we close it
+                position: 'bottom-center'
+            });
+            await getJson()
+            toast.dismiss();
+        }, 1);
     }, [])
     return (
         <div style={{ width: '100vw', height: '100vh' }}>
