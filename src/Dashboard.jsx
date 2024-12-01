@@ -24,6 +24,7 @@ import 'react-tooltip/dist/react-tooltip.css'
 import { useNavigate } from 'react-router-dom';
 import { data } from 'autoprefixer';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 const initialNodes = [
 ];
 const initialEdges = [];
@@ -181,17 +182,26 @@ const edgeTypes = {
 const Dashboard = () => {
     const [json, setJson] = useState({})
     const navigate = useNavigate();
-    if (!localStorage.getItem('isSigned')) {
-        navigate('/signin')
+    if (!localStorage.getItem("isSigned")) {
+        navigate("/signin")
     }
     const getJson = async () => {
-        const response = await axios.get('http://app.sundru.net/api/rabbitmq/get-merged-lists/1', {
-            headers: {
-                'Authorization': `Bearer ${token.current}`,
-                'Content-Type': 'application/json',
-            }
-        });
-        setJson(response.data)
+        const token = await localStorage.getItem('token')
+        console.log(token, "token")
+        try {
+            const response = await axios.get('/api/api/rabbitmq/get-merged-lists/1', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            console.log(response.data)
+            setJson(response.data)
+            toast.dismiss();
+        } catch (error) {
+            toast.dismiss();
+            toast.error("Something went wrong, Can't get data from the api")
+        }
     }
     useEffect(() => {
         if (json != {}) {
@@ -199,50 +209,53 @@ const Dashboard = () => {
             let links = []
             if (json?.attachedExchanges) {
                 json.attachedExchanges.forEach((attachExchange) => {
-                    elements.push({
-                        id: `exchange_${attachExchange.exchange.guid}`,
-                        position: { x: 0, y: elements.length * 50 },
-                        data: { label: attachExchange.exchange.exchangeName, color: "blue", exchange: attachExchange.exchange },
-                        type: 'normal'
-                    });
-                    if (attachExchange.queues) {
-                        attachExchange.queues.forEach((queue, index) => {
-                            elements.push({
-                                id: `queue_${queue.guid}`, // Using GUID as unique id  
-                                position: { x: 400, y: elements.length * 50 }, // Random x-position to avoid overlap  
-                                data: { label: queue.queueName, color: "purple", queue: queue },
-                                type: 'normal'
-                            });
-                            links.push({ id: `link_queue_${queue.guid}`, source: `exchange_${attachExchange.exchange.guid}`, target: `queue_${queue.guid}`, type: "buttonedge", data: { count: queue.messageCount, name: queue.queueName } })
+                    if (attachExchange?.exchange) {
+                        elements.push({
+                            id: `exchange_${attachExchange.exchange?.guid ? attachExchange.exchange.guid : attachExchange.exchange.exchangeName}`,
+                            position: { x: 0, y: elements.length * 50 },
+                            data: { label: attachExchange.exchange.exchangeName, color: "blue", exchange: attachExchange.exchange },
+                            type: 'normal'
                         });
+                        if (attachExchange.queues) {
+                            attachExchange.queues.forEach((queue, index) => {
+                                elements.push({
+                                    id: `queue_${queue?.guid ? queue.guid : queue.queueName}`, // Using GUID as unique id  
+                                    position: { x: 400, y: elements.length * 50 }, // Random x-position to avoid overlap  
+                                    data: { label: queue.queueName, color: "purple", queue: queue },
+                                    type: 'normal'
+                                });
+                                links.push({ id: `link_queue_${queue?.guid ? queue.guid : queue.queueName}`, source: `exchange_${attachExchange.exchange?.guid ? attachExchange.exchange.guid : attachExchange.exchange.exchangeName}`, target: `queue_${queue?.guid ? queue.guid : queue.queueName}`, type: "buttonedge", data: { count: queue.messageCount, name: queue.queueName } })
+                            });
+                        }
                     }
                 });
             }
             if (json?.unAttachedExchanges) {
                 json.unAttachedExchanges.forEach((unattachExchange) => {
-                    elements.push({
-                        id: `unattached_exchange_${unattachExchange.exchange.guid}`,
-                        position: { x: 0, y: elements.length * 50 },
-                        data: { label: unattachExchange.exchange.exchangeName, color: "blue", exchange: unattachExchange.exchange },
-                        type: 'normal'
-                    });
+                    if (unattachExchange?.exchange) {
+                        elements.push({
+                            id: `unattached_exchange_${unattachExchange.exchange?.guid ? unattachExchange.exchange.guid : unattachExchange.exchange.exchangeName}`,
+                            position: { x: 0, y: elements.length * 50 },
+                            data: { label: unattachExchange.exchange.exchangeName, color: "blue", exchange: unattachExchange.exchange },
+                            type: 'normal'
+                        });
+                    }
                 });
             }
             setNodes(elements);
             setEdges(links);
         }
     }, [json]);
-    useEffect(() => {
-        if (edges.length > 0 && nodes.length > 0)
-            getSocketData()
-    }, [edges, nodes])
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const onConnect = useCallback(
         (params) => setEdges((eds) => addEdge({ ...params, type: "buttonedge" }, eds)),
         [setEdges],
     );
-
+    useEffect(() => {
+        if (edges.length > 0 && nodes.length > 0)
+            getSocketData()
+    }, [edges, nodes])
     const getSocketData = async () => {
         const socket = new WebSocket('ws://app.sundru.net/ws');
         socket.onopen = function () {
@@ -314,12 +327,12 @@ const Dashboard = () => {
     }
     useEffect(() => {
         setTimeout(async () => {
+            toast.dismiss();
             toast.info('Loading data...', {
                 autoClose: false, // Keep the toast open until we close it
                 position: 'bottom-center'
             });
             await getJson()
-            toast.dismiss();
         }, 1);
     }, [])
     return (

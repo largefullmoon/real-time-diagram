@@ -20,24 +20,28 @@ const SignIn = () => {
             toast.warning("please input all field")
         } else {
             console.log(name, password)
-            const response = await axios.post('http://app.sundru.net/api/auth/login', {
-                username: name,
-                password: password,
-                email: ''
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
+            try {
+                const response = await axios.post('/api/auth/login', {
+                    username: name,
+                    password: password,
+                    email: ''
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                console.log(response, "response")
+                if (response.status === 200) {
+                    token.current = response.data
+                    toast.success("Successfully Athenticated")
+                    await localStorage.setItem('token', response.data);
+                    await localStorage.setItem('isSigned', true);
+                    navigate('/dashboard');
+                } else {
+                    toast.error("Authentication failed")
                 }
-            });
-            console.log(response, "response")
-            if (response.status === 200) {
-                token.current = response.data
-                toast.success("Successfully Athenticated")
-                await localStorage.setItem('token', response.data);
-                await localStorage.setItem('isSigned', true);
-                navigate('/dashboard');
-            } else {
-                toast.success("Authentication failed")
+            } catch (error) {
+                toast.error("Authentication failed")
             }
         }
     }
