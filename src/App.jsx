@@ -12,8 +12,8 @@ function App() {
       <Router>
         <ToastContainer />
         <Routes>
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/rabbitmq-app/signin" element={<SignIn />} />
+          <Route path="/rabbitmq-app/dashboard" element={<Dashboard />} />
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </Router >
