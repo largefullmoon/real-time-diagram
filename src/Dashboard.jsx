@@ -191,8 +191,8 @@ const CustomEdge = ({
 const edgeTypes = {
     buttonedge: CustomEdge,
 };
+const socket = new WebSocket('ws://app.sundru.net/ws');
 const Dashboard = () => {
-    const socket = new WebSocket('ws://app.sundru.net/ws');
     const [json, setJson] = useState({})
     const navigate = useNavigate();
     if (!localStorage.getItem("isSigned")) {
