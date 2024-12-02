@@ -265,9 +265,10 @@ const Dashboard = () => {
         [setEdges],
     );
     useEffect(() => {
-        if (edges.length > 0 && nodes.length > 0)
+        setTimeout(() => {
             getSocketData()
-    }, [edges, nodes])
+        }, 3000);
+    }, [])
     const getSocketData = async () => {
         const socket = new WebSocket('ws://app.sundru.net/ws');
         socket.onopen = function () {
