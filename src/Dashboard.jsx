@@ -318,7 +318,7 @@ const Dashboard = () => {
         socket.onmessage = function (event) {
             // Parse the server response (assuming it’s a JSON response)
             try {
-                const response = event.data;
+                const response = JSON.parse(event.data) || event.data;
                 if (Array.isArray(response)) {
                     // Display each QueueDto object in the response
                     console.log(response, "response")
