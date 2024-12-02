@@ -282,29 +282,30 @@ const Dashboard = () => {
             // Send the CONNECT frame
             socket.send(connectFrame);
             console.log('CONNECT frame sent.');
+            setInterval(() => {
+                // After connection is established, send a STOMP SEND frame
+                const messageBody = {
+                    "command": "SEND",
+                    "destination": "/app/realtime-info",
+                    "body": {
+                        "vhost": null,  // Replace with your vhost if necessary
+                        "queueNames": ["demoQueue_dlq"]  // Replace with the queue names you want
+                    }
+                };
 
-            // After connection is established, send a STOMP SEND frame
-            const messageBody = {
-                "command": "SEND",
-                "destination": "/app/realtime-info",
-                "body": {
-                    "vhost": null,  // Replace with your vhost if necessary
-                    "queueNames": ["demoQueue_dlq"]  // Replace with the queue names you want
-                }
-            };
+                // Convert the body to a JSON string
+                const bodyJson = JSON.stringify(messageBody.body);
 
-            // Convert the body to a JSON string
-            const bodyJson = JSON.stringify(messageBody.body);
+                // Construct the STOMP SEND frame
+                const sendFrame = 'SEND\n' +
+                    'destination:/app/realtime-info\n' +
+                    'content-type:application/json\n\n' +  // Content-Type header
+                    bodyJson + '\0'; // Null byte to terminate the frame
 
-            // Construct the STOMP SEND frame
-            const sendFrame = 'SEND\n' +
-                'destination:/app/realtime-info\n' +
-                'content-type:application/json\n\n' +  // Content-Type header
-                bodyJson + '\0'; // Null byte to terminate the frame
-
-            // Send the SEND frame
-            socket.send(sendFrame);
-            console.log('SEND frame sent: ' + bodyJson);
+                // Send the SEND frame
+                socket.send(sendFrame);
+                console.log('SEND frame sent: ' + bodyJson);
+            }, 10000);
 
             // Subscribe to the /topic/realtime-response
             const subscribeFrame = 'SUBSCRIBE\n' +
