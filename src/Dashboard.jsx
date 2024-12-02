@@ -322,7 +322,7 @@ const Dashboard = () => {
                 const match = response.match(/\[.*\]/s); // `s` flag allows `.` to match newline characters
                 let jsonArray = []
                 if (match) {
-                    jsonArray = match[0];
+                    jsonArray = JSON.parse(match[0]);
                     console.log(jsonArray);
                 } else {
                     console.error("No JSON array found!");
