@@ -80,6 +80,18 @@ export const NormalNode = ({ data, onDragStart }) => {
                 <p>
                     guid : ${data.queue.guid}
                 </p>
+                <p>
+                    messages : ${data.queue.messages}
+                </p>
+                <p>
+                    messages_ready : ${data.queue.messages_ready}
+                </p>
+                <p>
+                    messages_unacknowledged : ${data.queue.messages_unacknowledged}
+                </p>
+                <p>
+                    messages_details : ${JSON.stringify(data.queue.messages_details)}
+                </p>
                 ${html}
             </div>
             `
@@ -180,6 +192,7 @@ const edgeTypes = {
     buttonedge: CustomEdge,
 };
 const Dashboard = () => {
+    const socket = new WebSocket('ws://app.sundru.net/ws');
     const [json, setJson] = useState({})
     const navigate = useNavigate();
     if (!localStorage.getItem("isSigned")) {
@@ -254,10 +267,11 @@ const Dashboard = () => {
     );
     useEffect(() => {
         if (edges.length > 0 && nodes.length > 0)
-            getSocketData()
+            setInterval(() => {
+                getSocketData()
+            }, 5000);
     }, [edges, nodes])
     const getSocketData = async () => {
-        const socket = new WebSocket('ws://app.sundru.net/ws');
         socket.onopen = function () {
             console.log('WebSocket connection established.');
 
