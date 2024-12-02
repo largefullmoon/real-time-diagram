@@ -267,9 +267,7 @@ const Dashboard = () => {
     );
     useEffect(() => {
         if (edges.length > 0 && nodes.length > 0)
-            setInterval(() => {
-                getSocketData()
-            }, 5000);
+            getSocketData()
     }, [edges, nodes])
     const getSocketData = async () => {
         socket.onopen = function () {
