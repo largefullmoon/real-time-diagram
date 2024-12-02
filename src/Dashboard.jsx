@@ -321,9 +321,13 @@ const Dashboard = () => {
                 const response = event.data;
                 if (Array.isArray(response)) {
                     // Display each QueueDto object in the response
+                    console.log(response, "response")
                     response.forEach(queueDto => {
+                        console.log(queueDto, "queueDto")
+                        console.log(edges, "edges")
                         setEdges(edges.map((edge) => {
-                            if (edge.data.name === queueDto.queueName) {
+                            if (edge.data.name == queueDto.queueName) {
+                                console.log("------------------------------")
                                 return { ...edge, data: { ...edge.data, count: queueDto.messageCount } };
                             } else {
                                 return edge
