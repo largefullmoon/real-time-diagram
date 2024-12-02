@@ -328,7 +328,6 @@ const Dashboard = () => {
                     console.error("No JSON array found!");
                 }
                 if (Array.isArray(jsonArray)) {
-                    console.log(jsonArray, "response")
                     jsonArray.forEach(queueDto => {
                         console.log(queueDto, "queueDto")
                         console.log(edges, "edges")
