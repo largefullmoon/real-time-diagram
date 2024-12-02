@@ -318,11 +318,18 @@ const Dashboard = () => {
         socket.onmessage = function (event) {
             // Parse the server response (assuming it’s a JSON response)
             try {
-                const response = JSON.parse(event.data) || event.data;
-                if (Array.isArray(response)) {
-                    // Display each QueueDto object in the response
-                    console.log(response, "response")
-                    response.forEach(queueDto => {
+                const response = event.data;
+                const match = response.match(/\[.*\]/s); // `s` flag allows `.` to match newline characters
+                let jsonArray = []
+                if (match) {
+                    jsonArray = match[0];
+                    console.log(jsonArray);
+                } else {
+                    console.error("No JSON array found!");
+                }
+                if (Array.isArray(jsonArray)) {
+                    console.log(jsonArray, "response")
+                    jsonArray.forEach(queueDto => {
                         console.log(queueDto, "queueDto")
                         console.log(edges, "edges")
                         setEdges(edges.map((edge) => {
