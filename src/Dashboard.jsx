@@ -191,7 +191,6 @@ const CustomEdge = ({
 const edgeTypes = {
     buttonedge: CustomEdge,
 };
-const socket = new WebSocket('ws://app.sundru.net/ws');
 const Dashboard = () => {
     const [json, setJson] = useState({})
     const navigate = useNavigate();
@@ -270,6 +269,7 @@ const Dashboard = () => {
             getSocketData()
     }, [edges, nodes])
     const getSocketData = async () => {
+        const socket = new WebSocket('ws://app.sundru.net/ws');
         socket.onopen = function () {
             console.log('WebSocket connection established.');
 
